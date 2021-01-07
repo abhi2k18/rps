@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <script src="scripts\global_functions.js"></script>
+        <title>Rock Paper Scissor</title>
+        <link rel="stylesheet" href="stylesheets/style.css"/>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div id="header">
+            <ins id="status">status : connecting</ins> <ins id="users"></ins>
+            <br><!-- header is Done -->
+        </div>
+        <div id="globlal_chat">
+            <div id="gchats"></div>
+            <input type="text" id="ginput" name="name"><button onclick="gsend()">send</button>
+            
+            <div>
+                <input id="player_name"><button onclick="rename()">rename</button>
+                <div id="play_req">
+
+                </div>
+            </div>
+
+        </div>
+        <div id="container">
+            
+        </div>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="scripts/script.js"></script>
+    </body>
+</html>

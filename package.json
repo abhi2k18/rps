@@ -1,0 +1,21 @@
+{
+    "name": "RPS_Game",
+    "version": "1.0.0",
+    "keywords": [
+        "util",
+        "functional",
+        "server",
+        "client",
+        "browser"
+    ],
+    "author": "Abhishek",
+    "contributors": [],
+    "dependencies": {
+        "http": "^0.0.1-security",
+        "socket.io": "",
+        "express": ""
+    },
+    "scripts": {
+        "start": "node main.js"
+    }
+}
