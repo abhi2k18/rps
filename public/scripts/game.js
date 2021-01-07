@@ -236,12 +236,17 @@ function game(socket,container,pn){
                     animate=false;
                     ctx.font = "60px Arial";
                     ctx.fillText(reasult, 480, 480);
-                    setTimeout(startGame,3000);
+                    setTimeout(()=>{
+                        socket.emit("ready");
+                    },3000);
                 };
                 
             };
         };
         if(!activeCards[0].animated)!activeCards[0].onEnd(activeCards[0]);
         
+    });
+    socket.on("ready",()=>{
+        startGame();
     });
 }

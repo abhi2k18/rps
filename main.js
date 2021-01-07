@@ -87,6 +87,12 @@ io.on("connection",function(socket){
         socket.mate.emit("reveal",socket.card_no);
         socket.emit("reveal",socket.mate.card_no);
     });
+    socket.on("ready",()=>{
+        socket.ready=true;
+        if(!socket.mate.ready)return;
+        socket.mate.emit("ready");
+        socket.emit("ready");
+    });
 });
 
 function _(id){
