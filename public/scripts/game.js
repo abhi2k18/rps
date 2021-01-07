@@ -58,6 +58,7 @@ function game(socket,container,pn){
     var activeCards;
     var played=false;
     var animate=false;
+    var revealed=false;
     var playNo;
 
     function loadImage(path){
@@ -166,6 +167,7 @@ function game(socket,container,pn){
     }
     function startGame(){
         console.log('starting game');
+        revealed=false;
         animate=true;
         function Click(card){
             //console.log(card,"clicked");
@@ -209,6 +211,8 @@ function game(socket,container,pn){
         activeCards[0].moveTo(325,25,350); 
     });
     socket.on("reveal",(no)=>{
+        if(revealed)return;
+        revealed=true;
         activeCards[0].onEnd=function(card){
             card.flip(no);
             card.onEnd=function(card){
