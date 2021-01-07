@@ -17,7 +17,7 @@ const mime={
 };
 const server = http.createServer((req, res) => {
   var url="public"+req.url;
-  //console.log(url);
+  console.log(url);
   
   if(url=="public/")url+="index.html";
   if(fs.existsSync(url)){
