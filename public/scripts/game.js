@@ -176,7 +176,7 @@ function game(socket,container,pn){
             activeCards.splice(activeCards.indexOf(card),1);
             activeCards.push(card);
             card.onEnd=function(){
-                if(played)socket.emit("reveal");
+                if(played&&!revealed)socket.emit("reveal");
             };
             card.moveTo(325,400,350);
             activeCards[2].flip(0);
