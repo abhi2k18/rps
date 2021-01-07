@@ -17,7 +17,6 @@ const mime={
 };
 const server = http.createServer((req, res) => {
   var url="public"+req.url;
-  console.log("log",url);
   
   if(url=="public/")url+="index.html";
   if(fs.existsSync(url)){
@@ -82,16 +81,23 @@ io.on("connection",function(socket){
     socket.on("played",(no)=>{
         socket.card_no=no;
         socket.mate.emit("played");
-    });
-    socket.on("reveal",()=>{
-        socket.mate.emit("reveal",socket.card_no);
-        socket.emit("reveal",socket.mate.card_no);
+        
+        if(socket.card_no&&socket.mate.card_no){
+            socket.mate.emit("reveal",socket.card_no);
+            socket.emit("reveal",socket.mate.card_no);
+        }
     });
     socket.on("ready",()=>{
         socket.ready=true;
         if(!socket.mate.ready)return;
         socket.mate.emit("ready");
         socket.emit("ready");
+        
+        //reset everythings
+        socket.ready=false;
+        socket.mate.ready=false;
+        socket.mate.card_no=null;
+        socket.card_no=null;
     });
 });
 
@@ -106,21 +112,21 @@ function sendGlobal(event,data){
 server.listen(process.env.PORT || 8000);
 
 //to get differnt ips avilable
-//const { networkInterfaces } = require('os');
-//
-//const nets = networkInterfaces();
-//const results = Object.create(null); // Or just '{}', an empty object
-//
-//for (const name of Object.keys(nets)) {
-//    for (const net of nets[name]) {
-//        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-//        if (net.family === 'IPv4' && !net.internal) {
-//            if (!results[name]) {
-//                results[name] = [];
-//            }
-//            results[name].push(net.address);
-//        }
-//    }
-//}
-//
-//console.log(results);
+const { networkInterfaces } = require('os');
+
+const nets = networkInterfaces();
+const results = Object.create(null); // Or just '{}', an empty object
+
+for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+        if (net.family === 'IPv4' && !net.internal) {
+            if (!results[name]) {
+                results[name] = [];
+            }
+            results[name].push(net.address);
+        }
+    }
+}
+
+console.log(results);

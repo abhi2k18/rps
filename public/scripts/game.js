@@ -53,11 +53,27 @@ function game(socket,container,pn){
     const scissor=loadImage("images/scissor.png");
 
     const card_tex=[card_bg,rock,paper,scissor]
-    
     const cards=[];
+    const cAnim={
+        running:false,
+        anim:function(){
+            ctx.clearRect(0,0, 1000, 1000);
+            cards.forEach(c=>{c.draw();});
+            if(cAnim.running)
+                window.requestAnimationFrame(cAnim.anim);
+        },
+        start:function(){
+           cAnim.running=true;
+           window.requestAnimationFrame(cAnim.anim);
+        },
+        stop:function(){
+            cAnim.running = false;
+        }
+    };
+    
     var activeCards;
     var played=false;
-    var animate=false;
+ //   var animate=false;
     var revealed=false;
     var playNo;
 
@@ -92,9 +108,8 @@ function game(socket,container,pn){
                       card.size);
            } ;
            card.animated=false;
-           if(card.onEnd)card.onEnd(card);
-           card.onEnd=null;
            card.draw();
+           if(card.onEnd)card.onEnd(card);
         };
         card.flip=function(to){
             card.animated=true;
@@ -166,25 +181,20 @@ function game(socket,container,pn){
         ctx.drawImage(card,x,y,wid,hig);
     }
     function startGame(){
-        console.log('starting game');
         revealed=false;
-        animate=true;
         function Click(card){
             //console.log(card,"clicked");
             playNo=card.img;
             socket.emit("played",card.img);
             activeCards.splice(activeCards.indexOf(card),1);
             activeCards.push(card);
-            card.onEnd=function(){
-                if(played&&!revealed)socket.emit("reveal");
-            };
+            
             card.moveTo(325,400,350);
             activeCards[2].flip(0);
             activeCards[1].flip(0);
             activeCards.forEach((c)=>{
                 c.click=null;
             });
-            if(cards.length>6)cards.splice(0,2);
         }
         activeCards=[
             createCard(0,325,-200,"#FFD5D5",180),
@@ -198,12 +208,10 @@ function game(socket,container,pn){
         activeCards[1].click=Click;
         activeCards[2].click=Click;
         activeCards[3].click=Click;
-        function anim(){
-            ctx.clearRect(0,0, 1000, 1000);
-            cards.forEach(c=>{c.draw();});
-            if(animate)window.requestAnimationFrame(anim);
-        }
-        window.requestAnimationFrame(anim);
+        
+        cAnim.start();
+        
+        if(cards.length>6)cards.splice(0,2);
     }
     
     socket.on("played",()=>{
@@ -211,46 +219,55 @@ function game(socket,container,pn){
         activeCards[0].moveTo(325,25,350); 
     });
     socket.on("reveal",(no)=>{
-        if(revealed)return;
-        revealed=true;
+        function reset (){
+            if(activeCards[0].animated||activeCards[3].animated)return;
+            activeCards[0].onEnd=null;
+            activeCards[3].onEnd=null;
+            ctx.fillStyle="red";
+            var reasult="Loos";
+            if(playNo==no){
+                reasult="Draw";
+                ctx.fillStyle="grey";
+            }
+            else if((playNo==1&&no==3)||
+                    (playNo==2&&no==1)||
+                    (playNo==3&&no==2)){
+                            ctx.fillStyle="green";
+                            reasult="Win";
+                        }
+            cAnim.stop();
+            ctx.font = "60px Arial";
+            ctx.fillText(reasult, 480, 480);
+            setTimeout(()=>{
+                socket.emit("ready");
+            },3000);
+        }
+        function mv (){
+            if(activeCards[0].animated||activeCards[3].animated)return;
+            
+            activeCards[3].moveTo(685,110,100);
+            activeCards[0].moveTo(685,5,100);
+
+            cards.splice(cards.indexOf(activeCards[1]),1);
+            cards.splice(cards.indexOf(activeCards[2]),1);
+
+            activeCards[0].onEnd=reset;
+            activeCards[3].onEnd=reset;
+        }
+        
         activeCards[0].onEnd=function(card){
             card.flip(no);
             card.onEnd=function(card){
-                activeCards[3].moveTo(685,110,100);
-                card.moveTo(685,5,100);
-                
-                cards.splice(cards.indexOf(activeCards[1]),1);
-                cards.splice(cards.indexOf(activeCards[2]),1);
-                
-                activeCards[3].onEnd=function(){
-                    console.log(playNo,no);
-                    ctx.fillStyle="red";
-                    var reasult="Loos";
-                    if(playNo==no){
-                        reasult="Draw";
-                        ctx.fillStyle="grey";
-                    }
-                    else if((playNo==1&&no==3)||
-                            (playNo==2&&no==1)||
-                            (playNo==3&&no==2)){
-                                    ctx.fillStyle="green";
-                                    reasult="Win";
-                                }
-                    
-                    animate=false;
-                    ctx.font = "60px Arial";
-                    ctx.fillText(reasult, 480, 480);
-                    setTimeout(()=>{
-                        socket.emit("ready");
-                    },3000);
-                };
-                
+                activeCards[0].onEnd=mv;
+                activeCards[3].onEnd=mv;
+                if(activeCards[0].animated||activeCards[3].animated)return;
+                mv();
             };
         };
-        if(!activeCards[0].animated)!activeCards[0].onEnd(activeCards[0]);
-        
+        if(!activeCards[0].animated)activeCards[0].onEnd(activeCards[0]);
     });
     socket.on("ready",()=>{
+        console.log("ready",played,revealed);
         startGame();
     });
 }
