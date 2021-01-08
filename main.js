@@ -35,6 +35,29 @@ io.on("connection",function(socket){
     var card_no;
     socket.mate=null;
     
+    const played=(no)=>{
+        if(!(no>0&&no<4))return;
+        socket.card_no=no;
+        socket.mate.emit("played");
+        
+        if(socket.card_no&&socket.mate.card_no){
+            socket.mate.emit("reveal",socket.card_no);
+            socket.emit("reveal",socket.mate.card_no);
+        }
+    };
+    const ready =()=>{
+        socket.ready=true;
+        if(!socket.mate.ready)return;
+        socket.mate.emit("ready");
+        socket.emit("ready");
+        
+        //reset everythings
+        socket.ready=false;
+        socket.mate.ready=false;
+        socket.mate.card_no=null;
+        socket.card_no=null;
+    };
+    
     sendGlobal("update",{count:scount});
     socket.on('disconnect', function() {
         scount--;
@@ -59,7 +82,7 @@ io.on("connection",function(socket){
     
     //extra functions
     socket.on("rename",(data)=>{
-        if(!data)return;
+        if((!data)||data===name)return;
         name=data;
         sendGlobal("rename",{id:socket.id,name:name});
     });
@@ -76,29 +99,25 @@ io.on("connection",function(socket){
             socket.mate.emit("accept",{id:socket.id,name:name});
         }
     });
-    
+    socket.on("play_with_ai",()=>{
+        console.log("playin with ai");
+        
+        socket.removeListener("played",played);
+        socket.removeListener("ready",ready);
+        
+        socket.on("played",(no)=>{
+            if(!(no>0&&no<4))return;
+            socket.card_no=no;
+            socket.emit("played");
+            socket.emit("reveal",1+Math.floor(3*Math.random()));
+        });
+        socket.on("ready",()=>{
+            socket.emit("ready");
+        });
+    });
     //start game;
-    socket.on("played",(no)=>{
-        socket.card_no=no;
-        socket.mate.emit("played");
-        
-        if(socket.card_no&&socket.mate.card_no){
-            socket.mate.emit("reveal",socket.card_no);
-            socket.emit("reveal",socket.mate.card_no);
-        }
-    });
-    socket.on("ready",()=>{
-        socket.ready=true;
-        if(!socket.mate.ready)return;
-        socket.mate.emit("ready");
-        socket.emit("ready");
-        
-        //reset everythings
-        socket.ready=false;
-        socket.mate.ready=false;
-        socket.mate.card_no=null;
-        socket.card_no=null;
-    });
+    socket.on("played",played);
+    socket.on("ready",ready);
 });
 
 function _(id){

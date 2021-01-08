@@ -17,15 +17,21 @@ and open the template in the editor.
             <ins id="status">status : connecting</ins> <ins id="users"></ins>
             <br><!-- header is Done -->
         </div>
+        <br>
         <div id="globlal_chat">
             <div id="gchats"></div>
-            <input type="text" id="ginput" name="name"><button onclick="gsend()">send</button>
             
-            <div>
+            <div class="a">
+                <input type="text" id="ginput" name="name" placeholder="Message To Send"><button onclick="gsend()">send</button>
+            </div>
+            <div class="a">
                 <input id="player_name"><button onclick="rename()">rename</button>
-                <div id="play_req">
+                <div id="play_req" class="a">
 
                 </div>
+            </div>
+            <div class="a">
+                <button onclick="play_with_ai()">Play with AI!</button>
             </div>
 
         </div>

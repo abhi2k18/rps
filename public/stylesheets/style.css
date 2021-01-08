@@ -7,6 +7,16 @@ and open the template in the editor.
     Created on : 01-Jan-2021, 7:43:03 pm
     Author     : Abhishek
 */
+.a{
+  text-align: center;
+  align-items: center;
+  padding: auto;
+}
+.freq{
+    margin: auto;
+    padding: 10px;
+    padding-top: 60px;
+}
 body{
     background-color: cyan;
 }
@@ -44,4 +54,7 @@ canvas {
     color: wheat;
     background-color: gray;
     padding: 20px;
+}
+#player_name{
+    width: 140px;
 }

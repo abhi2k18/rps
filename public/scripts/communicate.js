@@ -19,12 +19,20 @@ const play_req = _("play_req");
 
 const socket = io.connect('/');
 
+ginput.onkeydown=(e)=>{if(e.keyCode===13){
+        gsend();
+        ginput.focus();
+    }};
+
 function gsend(){
     var msg= String(ginput.value).trim();
     if(msg.length>0)socket.emit('gsend',msg);
     ginput.value="";
 }
-
+function play_with_ai(){
+    socket.emit("play_with_ai");
+    startGame(0);
+}
 function rename(){
     var msg= String(player_name.value).trim();
     if(msg.length>0)socket.emit('rename',msg);
@@ -40,19 +48,22 @@ function startGame(player_no){
     console.log("start Game");
     globlal_chat.style.display="none";
     load("game.js").then(()=>{
-        game(socket,_("container"),player_no);
-    });;
+        game(socket,container,player_no);
+    });
 }
 
 
 socket.on("connect",()=>{
     status.innerHTML="connected";
     header.style.backgroundColor="green";
-    player_name.value=socket.id;
+    var name=prompt("Please enter your name",socket.id);
+    player_name.value=name;
+    rename();
 });
 socket.on("disconnect",()=>{
     status.innerHTML="status : connecting";
     header.style.backgroundColor="grey";
+    document.location.reload();
 });
 
 socket.on("update",(data)=>{
@@ -108,18 +119,21 @@ socket.on("rename",(data)=>{
 socket.on("playReq",(data)=>{
     const row =$("div");
     const id=$("line");
-    const lable=$("lable");
+    const lable=$("line");
+    const ttl=$("line");
     const accept=$("button");
     const remove=$("button");
-    
+
+    row.classList.add("freq");
+    row.appendChild(ttl);
     row.appendChild(id);
     row.appendChild(lable);
     row.appendChild(accept);
     row.appendChild(remove);
-    
-    id.innerHTML=data.id;
-    lable.innerHTML=data.name;
-    lable.width="50%";
+
+    ttl.innerHTML   ="Would You Like TO Play With ?";
+    id.innerHTML    ="ID   : "+data.id;
+    lable.innerHTML ="Name : "+data.name;
     accept.innerHTML="accept";
     accept.onclick=function(){
         startGame(1);
