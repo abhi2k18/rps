@@ -6,39 +6,18 @@ and open the template in the editor.
 -->
 <html>
     <head>
-        <script src="scripts\global_functions.js"></script>
         <title>Rock Paper Scissor</title>
-        <link rel="stylesheet" href="stylesheets/style.css"/>
+        
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <div id="header">
-            <ins id="status">status : connecting</ins> <ins id="users"></ins>
-            <br><!-- header is Done -->
-        </div>
-        <br>
-        <div id="globlal_chat">
-            <div id="gchats"></div>
-            
-            <div class="a">
-                <input type="text" id="ginput" name="name" placeholder="Message To Send"><button onclick="gsend()">send</button>
-            </div>
-            <div class="a">
-                <input id="player_name"><button onclick="rename()">rename</button>
-                <div id="play_req" class="a">
-
-                </div>
-            </div>
-            <div class="a">
-                <button onclick="play_with_ai()">Play with AI!</button>
-            </div>
-
-        </div>
-        <div id="container">
-            
-        </div>
+        <!-- currently unused
+        !-->
         <script src="/socket.io/socket.io.js"></script>
+        <script src="scripts/global_functions.js"></script>
+        <script src="scripts/objects_v3.js"></script>
+        <script src="scripts/game_v2.js"></script>
         <script src="scripts/script.js"></script>
     </body>
 </html>

@@ -1,0 +1,34 @@
+Rules: 
+
+  A)basic
+
+    1)Winner of First Two rounds wins match 
+
+    2)Rock beats Paper
+
+    3)Paper beat Scissor
+
+    4)Scissor beat Rock
+
+
+  B)play modes
+    
+   Night :
+
+     1)don't need to select any card before playing
+
+     2)can play any card
+
+     3)if opponent is Sneaker then need to paly fist and reveal your card
+
+     4)if opponent is Night then both cards are revealed at same time
+   
+   Sneaker :
+
+     1)need to select 3 cards before playing
+
+     2)can play from selected cards and played card is removed from selected cards
+
+     3)if opponent is Night then need to paly after opponent revealed it's card 
+
+     4)if opponent is Sneaker then both cards are revealed at same time

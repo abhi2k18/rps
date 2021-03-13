@@ -5,147 +5,74 @@
  */
 
 
-//http server
-const http = require('http');
-const fs = require('fs');
-const mime={
-    "html":"text/html",
-    "js":"text/javascript",
-    "css":"text/css",
-    "png":"image/png",
-    "ico":"image/x-icon"
-};
-const server = http.createServer((req, res) => {
-  var url="public"+req.url;
-  
-  if(url=="public/")url+="index.html";
-  if(fs.existsSync(url)){
-      res.writeHead(200, { 'content-type': mime[url.substring(url.lastIndexOf('.')+1,url.length)] });
-      fs.createReadStream(url).pipe(res);
-  }
-  else res.writeHead(404);
-});
 
-//socket io code
-const io = require('socket.io')(server);
-var scount=0;
-io.on("connection",function(socket){
-    scount++;
-    var name=socket.id;
-    var card_no;
-    socket.mate=null;
+const objects=require("./objects");
+const server =new objects.Server();
+
+const ActivePlayers={};
+const freePlayers=[];
+
+//basic match setup
+function makePlayerSocket(socket,other,match){
+    socket.match=match;//set match to accase some values
+    //send event
+    socket.emit("onOtherPlayerJoin"); //inform client that other player is found
     
-    const played=(no)=>{
-        if(!(no>0&&no<4))return;
-        socket.card_no=no;
-        socket.mate.emit("played");
-        
-        if(socket.card_no&&socket.mate.card_no){
-            socket.mate.emit("reveal",socket.card_no);
-            socket.emit("reveal",socket.mate.card_no);
-        }
-    };
-    const ready =()=>{
-        socket.ready=true;
-        if(!socket.mate.ready)return;
-        socket.mate.emit("ready");
-        socket.emit("ready");
-        
-        //reset everythings
-        socket.ready=false;
-        socket.mate.ready=false;
-        socket.mate.card_no=null;
-        socket.card_no=null;
-    };
-    
-    sendGlobal("update",{count:scount});
-    socket.on('disconnect', function() {
-        scount--;
-        sendGlobal("update",{closed:socket.id,count:scount});
+    //event listners
+    socket.on("playerJoin",()=>match.getOther(socket).emit("onOtherPlayerJoin"));
+    socket.on("playerReady",(cards)=>{
+        socket.isKnight=cards===null;
+        socket.ready = true;
+        other.emit("onOtherPlayerReady",socket.isKnight);
+        if(other.ready)match.setupVar();
     });
-    
-    //message sendind/receiving
-    socket.on("gsend",(data)=>{
-        if(!data)return;
-        sendGlobal("gmsg",{id:socket.id,name:name,msg:data});
-    });
-    socket.on("rsend",(data)=>{
-        if(!data)return;
-        if(room)io.to(room)
-                .emit("rmsg",{id:socket.id,name:name,msg:data});
-    });
-    socket.on("psend",(data)=>{
-        if(!data)return;
-        if(_(data.to))
-            _(data.to).emit("pmsg",{id:socket.id,name:name,msg:data.msg});
-    }); 
-    
-    //extra functions
-    socket.on("rename",(data)=>{
-        if((!data)||data===name)return;
-        name=data;
-        sendGlobal("rename",{id:socket.id,name:name});
-    });
-    socket.on("playReq",(data)=>{
-        if(!data)return;
-        if(_(data))
-            _(data).emit("playReq",{id:socket.id,name:name});
-    });
-    socket.on("accept",(data)=>{
-        if(!data)return;
-        socket.mate=_(data);
-        if(socket.mate){
-            socket.mate.mate=socket;
-            socket.mate.emit("accept",{id:socket.id,name:name});
+    socket.on("playerPlayed",(ci)=>{
+        socket.playedCard=ci;
+        socket.played=true;
+        socket.revealed=socket.reveale||other.played;
+        other.emit("onOtherPlayerPlay",socket.revealed ? ci:3);
+        if(other.played){
+            if(!other.revealed)socket.emit("onOtherPlayerReveal",other.playedCard);
+            socket.played=false;
+            other.played=false;
+            socket.revealed=false;
+            other.revealed=false; //reset everything
         }
     });
-    socket.on("play_with_ai",()=>{
-        console.log("playin with ai");
+//    socket.on();
+    
+}
+class match{
+    socks={}
+    constructor(sock1,sock2){
+        this.socks[false]=sock1;
+        this.socks[true]=sock2;
         
-        socket.removeListener("played",played);
-        socket.removeListener("ready",ready);
+        makePlayerSocket(sock1,sock2,this);//setup first socket
+        makePlayerSocket(sock2,sock1,this);//setup second socket
+    }
+    getOther(current){return socks[socks[true]!==current];}// simple but complex
+    setupVar(){
+        if(this.socks[true].isKnight!==this.socks[false].isKnight){
+            if(this.socks[true].isKnight)this.socks[true].reveal=true;
+            else this.socks[false].reveal=true;
+        }
+    }
+}
+
+server.io.on("connection",function(sock){
+    //new scocket is joined
+    sock.on("playerJoin",()=>{
+        console.log("player join");
+        if(sock.match!==undefined)return;
+        if(freePlayers.length>0){
+            new match(freePlayers.shift(),sock);
+        }else freePlayers.push(sock);
         
-        socket.on("played",(no)=>{
-            if(!(no>0&&no<4))return;
-            socket.card_no=no;
-            socket.emit("played");
-            socket.emit("reveal",1+Math.floor(3*Math.random()));
-        });
-        socket.on("ready",()=>{
-            socket.emit("ready");
-        });
+    });//quicj match setup
+    sock.on("disconnect",()=>{
+        let i = freePlayers.indexOf(sock);
+        if(i>=0)freePlayers.splice(i,0);
     });
-    //start game;
-    socket.on("played",played);
-    socket.on("ready",ready);
 });
-
-function _(id){
-    return io.of('/').sockets.get(id);
-}
-function sendGlobal(event,data){
-    io.sockets.emit(event,data);
-}
-
-//starting  server for http and socket io clients
-server.listen(process.env.PORT || 8000);
-
-//to get differnt ips avilable
-//const { networkInterfaces } = require('os');
-//
-//const nets = networkInterfaces();
-//const results = Object.create(null); // Or just '{}', an empty object
-//
-//for (const name of Object.keys(nets)) {
-//    for (const net of nets[name]) {
-//        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-//        if (net.family === 'IPv4' && !net.internal) {
-//            if (!results[name]) {
-//                results[name] = [];
-//            }
-//            results[name].push(net.address);
-//        }
-//    }
-//}
-//
-//console.log(results);
+server.start();
