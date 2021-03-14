@@ -17,34 +17,23 @@ const reasult=[
     [2,1,0],
     [0,2,1]
 ];
-const rColor=["red","grey","green"];
+const rColor=[2,3,5];//result color bg
 const rTitles=["You Loose","It's Tie","You Win"];
 const rSentences=["opponent is luckier you loose","WOw you both are on same luck level","You Win Lucky ..."];
 const colorPallet={
     green:["#d6ffdd","#00ab11","#689663"],
     red:["#ffdfd6","#ff0000","#966363"],
-    grey:["#d9d9d9","#969696","#474747"]
+    grey:["#d9d9d9","#969696","#474747"],
+    
 };
-
-//function to manipulate colors
-function toHex(numb){
-    var hx = numb.toString(16);
-    if(hx.length>1)return hx;
-    return "0"+hx;
-}
-function toNumb(hex){
-    return parseInt(hex,16);
-}
-function toRGB(color){
-    return {
-        R:toNumb(color.substr(1,2)),
-        B:toNumb(color.substr(3,2)),
-        G:toNumb(color.substr(5,2))
-    };
-}
-function toColor(r,g,b){
-    return '#'+toHex(r)+toHex(g)+toHex(b);
-}
+const pallet=[
+    '#2C363F', //bg
+    '#BE313F', //opponent a 
+    '#DFAFB4', //opponent b
+    'grey', //tie , secondary bg
+    '#75D66B', //player a
+    '#6C9B67'  //player b
+];
 
 class Player{
     ready=false;
@@ -136,7 +125,7 @@ class Match{
     onPlayerPlay(card){
         if(this.p1.canPlay){
             //create New Card to Animate or use old one according to player mode
-            this.p1.play(this.p1.knight ? this.createCard(...card.getOrigin(),card.ci,colorPallet.green[1]):card);
+            this.p1.play(this.p1.knight ? this.createCard(...card.getOrigin(),card.ci,pallet[4]):card);
             this.baseLayer.moveToTop(this.p1.card);
             animate(this.p1.card,250,200,100,100,0.4,()=> this.onRoundEnd());
             if(this.p1.first) this.p2.canPlay=true;
@@ -156,7 +145,7 @@ class Match{
         if(this.p2.canPlay){
             this.p2.ci=ci;
             this.p1.canPlay=(!this.p1.played)||this.p2.first;
-            this.p2.play(this.createCard(250,-90,ci,colorPallet.red[1]));
+            this.p2.play(this.createCard(250,-90,ci,pallet[1]));
             animate(this.p2.card,250,200-this.wid2-10,this.wid2,this.wid2,0.4,()=>{
                 this.isOtherPlayerRevelead=ci<3;
                 this.isOtherPlayerPlayed=true;
@@ -187,7 +176,7 @@ class Match{
                     let r=reasult[this.p1.ci][this.p2.ci];
                     if(r===0)this.p2.win++;
                     else if(r===2)this.p1.win++;
-                    this.cardSlots[this.roundNo].roundRectColor=colorPallet[rColor[r]][2];
+                    this.cardSlots[this.roundNo].roundRectColor=pallet[rColor[r]];
                     this.startNewRound();
                 });
             },800);
@@ -226,7 +215,7 @@ class Match{
         //setup cards to play
         this.baseLayer.addChield(makeRoundedRect(new Rect(100,350,300,100),10,"black"));//playable Cards BG
         for (var i = 0; i < 3; i++){
-            const card=this.createCard(160+(i*90),400,this.p1.cards[i],colorPallet.green[1]);
+            const card=this.createCard(160+(i*90),400,this.p1.cards[i],pallet[4]);
             makeClickable(card,()=>this.onPlayerPlay(card));
         }
         
@@ -238,10 +227,10 @@ class Match{
         
         setTimeout(()=>{
             this.baseLayer.clear();
-            this.baseLayer.addChield(new TextBox(250,200,20,colorPallet[rColor[reasult]][1],rTitles[reasult]));
-            this.baseLayer.addChield(new TextBox(250,260,20,colorPallet[rColor[reasult]][1],rSentences[reasult]));
-            this.game.AddTextButton(150,300,"Rematch",colorPallet.green[0],colorPallet.grey[2],()=>this.setMatchScreen());
-            this.game.AddTextButton(350,300," Quite ",colorPallet.green[0],colorPallet.grey[2],()=>this.quiteMatch());
+            this.baseLayer.addChield(new TextBox(250,140,80,pallet[rColor[reasult]],rTitles[reasult]));
+            this.baseLayer.addChield(new TextBox(250,260,20,pallet[rColor[reasult]],rSentences[reasult]));
+            this.game.AddTextButton(180,360,"Rematch",pallet[1],pallet[4],()=>this.setMatchScreen());
+            this.game.AddTextButton(320,360," Quite ",pallet[4],pallet[1],()=>this.quiteMatch());
         },1000);
     }
     quiteMatch(){this.game.setStartScreen();}
@@ -496,18 +485,32 @@ class RPSgame {
         return sText;
     }
     constructor(body){
-        this.canvas=new Canvas(500,500);
-        body.appendChild(this.canvas.canvas);
+        const container = $("div");
+        body.appendChild(container);
+        body.style.margin="0";
+        body.style.padding="0";
+//        body.style.height="100%";
         
+        this.canvas=new Canvas(500,500);
+        container.appendChild(this.canvas.canvas);
+        container.style.width="100vw";
+        container.style.height="100vh";
+        container.style.position="absulute";
+        container.style.display="flex";
+        this.canvas.canvas.style.display="block";
+        this.canvas.canvas.style.margin="auto";
+        if(screen.width<screen.height)this.canvas.canvas.style.width="100vw";
+        else this.canvas.canvas.style.width="100vh";;
 //        this.canvas.setBG ("grey");
-        this.canvas.addChield(makeDrawable({},ctx=>{ctx.fillStyle=colorPallet.grey[0];ctx.fillRect(0,0,500,500);}));
+        container.style.backgroundColor=pallet[0];
+        this.canvas.addChield(makeDrawable({},ctx=>{ctx.fillStyle=pallet[0];ctx.fillRect(0,0,500,500);}));
         
         this.baseLayer= new Layer();
         this.canvas.addChield(this.baseLayer);
         this.baseLayer.addChield(new TextBox(250,250,30,"Grey","Loading ...."));
         
         this.canvas.startDrawing();
-        this.cardSprites=loadImages("rock","paper","scissor","card_bg","qmark","close","arrow_up",()=>{
+        this.cardSprites=loadImages("rock","paper","scissor","card_bg_db","qmark","close","arrow_up",()=>{
             fetch("texts/Rules.txt").then(res =>res.text().then(text=>{
                 this.initCommunication();
                 this.help=new HelpLayer( this.baseLayer,this.cardSprites[4],this.cardSprites[5],this.cardSprites[6]);
@@ -523,13 +526,13 @@ class RPSgame {
     
     setStartScreen(){
         this.baseLayer.clear();
-        this.baseLayer.addChield(new TextBox(250,100,40,"#99fff5","Rock Paper Scissor"));
+        this.baseLayer.addChield(new TextBox(250,100,40,pallet[4],"Rock Paper Scissor"));
         
         // Rotating Card Animation
         let card = new SpriteBox(250,250,100,100,this.cardSprites[3]);
         card.sprites=this.cardSprites;
         card.flipped=true;
-        makeRoundedRect(card,10,colorPallet.green[0]);
+        makeRoundedRect(card,10,pallet[2]);
         let setTransform=function(){
                 if(this.wid===1){
                     //Change card
@@ -544,14 +547,14 @@ class RPSgame {
         this.baseLayer.addChield(card);
         
         //onlinematch setup
-        this.AddTextButton(250,280+100,"QuickMatch","Green","#e0ffed",
+        this.AddTextButton(250,280+100,"QuickMatch",pallet[1],pallet[4],
                 ()=>{
                     this.match=new OnlineMatch(this);
                     return true;
                 });
         
         //offline match setup
-        this.AddTextButton(250,320+100,"OfflinePlay","Green","#e0ffed",
+        this.AddTextButton(250,320+100,"OfflinePlay",pallet[1],pallet[4],
                 ()=>{
                     this.match=new OfflineMatch(this);
                     return true;
@@ -561,14 +564,14 @@ class RPSgame {
     setWaitScreen(){
         this.baseLayer.clear();
         
-        this.baseLayer.addChield(new TextBox(250,250,20,"Black","Searching For Other Players ....")) ;
-        this.AddTextButton(250,300,"Quit","#ffd4d1","#690c05",()=>this.setStartScreen());
+        this.baseLayer.addChield(new TextBox(250,250,20,pallet[3],"Searching For Other Players ....")) ;
+        this.AddTextButton(250,300,"Quit",pallet[3],pallet[1],()=>this.setStartScreen());
     }  //wait screen shown till other player joins
     setPlayModeSelector(){
         this.baseLayer.clear();
-        this.baseLayer.addChield(new TextBox(250,200,30,"#99fff5","Select playing mode"));
-        this.AddTextButton(500/3,300,"Sneaker","Green","#e0ffed",()=>this.setCardSelector());
-        this.AddTextButton(500/1.5,300,"Knight","Green","#e0ffed",()=>this.setReadyScreen());
+        this.baseLayer.addChield(new TextBox(250,200,30,pallet[4],"Select playing mode"));
+        this.AddTextButton(500/3,300,"Sneaker",pallet[1],pallet[4],()=>this.setCardSelector());
+        this.AddTextButton(500/1.5,300,"Knight",pallet[1],pallet[4],()=>this.setReadyScreen());
     }
     setCardSelector(){
         this.baseLayer.clear();
@@ -581,22 +584,22 @@ class RPSgame {
         };
         
         this.baseLayer.addChield(makeRoundedRect(new Rect(100,250,300,100),15,"black"));
-        let selHelp= new TextBox(250,300,15,"white","Select 3 cards from below");
+        let selHelp= new TextBox(250,300,15,pallet[3],"Select 3 cards from below");
         this.baseLayer.addChield(selHelp);
         
         let cp=[[180-15,450,60,60],[250,450,60,60],[320+15,450,60,60]];
-        let nbtn = this.AddTextButton(450,450,"Next","Green","#e0ffed",()=>{
+        let nbtn = this.AddTextButton(450,450,"Next",pallet[1],pallet[4],()=>{
                         this.setReadyScreen(placedCards);
                         return true;
                     });
         nbtn.disable();
         
         let addCard =function (cx,cy,wid,hig,ci){
-            if(Selected ==3)return;
+            if(Selected ===3)return;
             Selected++;
             if(selHelp.visible)selHelp.disable();
             let card=new SpriteBox(cx,cy,wid,hig,this.cardSprites[ci]);
-            makeRoundedRect(card,10,colorPallet.green[1]);
+            makeRoundedRect(card,10,pallet[4]);
             
             this.baseLayer.addChield(card);
             for(var i =0;i<3;i++)if(placedCards[i]===false){
@@ -617,9 +620,9 @@ class RPSgame {
         }.bind(this);
          
          //most unreadable thing add bottom 3 cards
-        this.baseLayer.addChield(makeClickable(makeRoundedRect(new SpriteBox(...cp[0],this.cardSprites[0]),10,colorPallet.green[0]),function(){addCard(...cp[0],0);}));
-        this.baseLayer.addChield(makeClickable(makeRoundedRect(new SpriteBox(...cp[1],this.cardSprites[1]),10,colorPallet.green[0]),function(){addCard(...cp[1],1);}));
-        this.baseLayer.addChield(makeClickable(makeRoundedRect(new SpriteBox(...cp[2],this.cardSprites[2]),10,colorPallet.green[0]),function(){addCard(...cp[2],2);}));
+        this.baseLayer.addChield(makeClickable(makeRoundedRect(new SpriteBox(...cp[0],this.cardSprites[0]),10,pallet[5]),function(){addCard(...cp[0],0);}));
+        this.baseLayer.addChield(makeClickable(makeRoundedRect(new SpriteBox(...cp[1],this.cardSprites[1]),10,pallet[5]),function(){addCard(...cp[1],1);}));
+        this.baseLayer.addChield(makeClickable(makeRoundedRect(new SpriteBox(...cp[2],this.cardSprites[2]),10,pallet[5]),function(){addCard(...cp[2],2);}));
         
 //        this.AddClickable(new RoundedRect(new SpriteBox(,this.baseLayer),))
 //                .onClick=function(){addCard(...cp[0],0);return true;};
@@ -630,7 +633,7 @@ class RPSgame {
     }
     setReadyScreen(cards){
         this.baseLayer.clear();
-        this.baseLayer.addChield(new TextBox(250,250,20,"Black","Waiting For Other Player to Ready",this.canvas.ctx));
+        this.baseLayer.addChield(new TextBox(250,250,20,pallet[3],"Waiting For Other Player to Ready",this.canvas.ctx));
         
         //calling setPlayer in match;
         this.match.onPlayerReady(cards);
@@ -639,129 +642,10 @@ class RPSgame {
     setReasultScreen(reasult){
         this.clearLayer();
         new TextBox(250,230,rSentences[reasult],this.clr,20,this.canvas.ctx,this.baseLayer);
-        this.AddTextButton(150,330,"replay","white","green");
-//                .onClick=()=>{
-//            reasult++;
-//            if(reasult===3)reasult=0;
-//            this.setReasultScreen(reasult);
-//        };
-        this.AddTextButton(350,330," quit ","white","red");
-//                .onClick=()=>{
-//            this.canvas.setBG(bg.value);
-//            this.clr=fgc.value;
-//            this.setReasultScreen(reasult);
-//        };
+        this.AddTextButton(150,330,"replay",pallet[1],pallet[4]);
+        this.AddTextButton(350,330," quit ",pallet[4],pallet[1]);
     }
     
-    setCololrPicker(){
-            this.baseLayer.clear();
-        var sClr=toRGB(colorPallet.bg);
-        var r,g,b;
-        function updateColor(){};
-        function selectColor(name,index){
-            console.log(name,index);
-            let clr;
-            if(index===undefined){
-                updateColor=function(){colorPallet.bg=toColor(sClr.R,sClr.G,sClr.B);};
-                clr=toRGB(colorPallet.bg);
-            }
-            else {
-                updateColor=function(){colorPallet[name][index]=toColor(sClr.R,sClr.G,sClr.B);};
-                clr=toRGB(colorPallet[name][index]);
-            }
-            sClr=clr;
-            r.setText(clr.R);
-            g.setText(clr.G);
-            b.setText(clr.B);
-        }
-        
-        var addColorButton=(name,x)=>{
-            console.log(this);
-            let tb= new TextBox(x,300,name+": "+toHex(sClr[name]),"white",20);
-            this.baseLayer.addChield(tb);
-            this.AddTextButton(x,330,"+1","white","black").onClick=()=>{
-                sClr[name]++;
-                tb.setText(name+": "+toHex(sClr[name]));
-            };
-            this.AddTextButton(x,270,"-1","white","black").onClick=()=>{
-                sClr[name]--;
-                tb.setText(name+": "+toHex(sClr[name]));
-            };
-            return tb;
-        };
-        
-        r=addColorButton("R",150);
-        g=addColorButton("G",250);
-        b=addColorButton("B",350);
-        
-        let bg= new CentredBase(250,200,60,60,this.baseLayer,function(ctx){
-            ctx.fillStyle=colorPallet.bg;
-            ctx.beginPath();
-            ctx.rect(this.x,this.y,this.wid,this.hig);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-        });
-        this.AddClickable(bg).onClick=()=>{
-            selectColor("bg");
-            return true;
-        };
-        
-        let c1=new CentredBase(250,100,120,40,this.baseLayer,function(ctx){
-            ctx.fillStyle=colorPallet.green[0];
-            ctx.fillRect(this._x1,this.y,this._wid,this.hig);
-            ctx.fillStyle=colorPallet.green[1];
-            ctx.fillRect(this._x2,this.y,this._wid,this.hig);
-            ctx.fillStyle=colorPallet.green[2];
-            ctx.fillRect(this._x3,this.y,this._wid,this.hig);
-        });
-        c1._wid=c1.wid/3;
-        c1._x1=c1.x;
-        c1._x2=c1.x+c1._wid;
-        c1._x3=c1.x+2*c1._wid;
-        
-        this.AddClickable(c1).onClick = function(px){
-            selectColor("green",this.base._x2>px ? 0 :(this.base._x3>px ? 1:2));
-            return true;
-        };
-        
-        let c2=new CentredBase(120,100,120,40,this.baseLayer,function(ctx){
-            ctx.fillStyle=colorPallet.red[0];
-            ctx.fillRect(this._x1,this.y,this._wid,this.hig);
-            ctx.fillStyle=colorPallet.red[1];
-            ctx.fillRect(this._x2,this.y,this._wid,this.hig);
-            ctx.fillStyle=colorPallet.red[2];
-            ctx.fillRect(this._x3,this.y,this._wid,this.hig);
-        });
-        c2._wid=c2.wid/3;
-        c2._x1=c2.x;
-        c2._x2=c2.x+c2._wid;
-        c2._x3=c2.x+2*c2._wid;
-        
-        this.AddClickable(c2).onClick = function(px){
-            selectColor("red",this.base._x2>px ? 0 :(this.base._x3>px ? 1:2));
-            return true;
-        };
-        
-        let c3=new CentredBase(380,100,120,40,this.baseLayer,function(ctx){
-            ctx.fillStyle=colorPallet.grey[0];
-            ctx.fillRect(this._x1,this.y,this._wid,this.hig);
-            ctx.fillStyle=colorPallet.grey[1];
-            ctx.fillRect(this._x2,this.y,this._wid,this.hig);
-            ctx.fillStyle=colorPallet.grey[2];
-            ctx.fillRect(this._x3,this.y,this._wid,this.hig);
-        });
-        c3._wid=c3.wid/3;
-        c3._x1=c3.x;
-        c3._x2=c3.x+c3._wid;
-        c3._x3=c3.x+2*c3._wid;
-        
-        this.AddClickable(c3).onClick = function(px){
-            selectColor("grey",this.base._x2>px ? 0 :(this.base._x3>px ? 1:2));
-            return true;
-        };
-        
-    }
     startDebugGame(){
         this.match=new DebugMatch(this);
     }

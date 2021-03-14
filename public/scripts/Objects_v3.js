@@ -403,7 +403,11 @@ class Canvas extends Layer{
         this.hScale=this.wid/rect.width;
         this.vScale=this.hig/rect.height;
     }
-
+    handleTouch(event,handler){
+        for(i=0;i<event.length;i++){
+            handler(this.hScale*(event[i].x-this.xOffset),this.vScale*(event[i].y-this.yOffset),event[i].identifier);
+        }
+    }
     constructor (wid,hig){
         super();
         this.wid=wid||500;
@@ -418,9 +422,11 @@ class Canvas extends Layer{
         this.canvas.addEventListener("mousedown",(event)=>{this.onDown(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
         this.canvas.addEventListener("mouseup",(event)=>{this.onUp(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
         this.canvas.addEventListener("mousemove",(event)=>{this.onMove(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
-//        this.canvas.addEventListener("touchstart",(event)=>{this.onDown(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
-//        this.canvas.addEventListener("touchend",(event)=>{this.onUp(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
-//        this.canvas.addEventListener("touchmove",(event)=>{this.onMove(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
+        
+        //touch event setup
+        this.canvas.addEventListener("touchstart",(event)=>this.handleTouch(event.touches,this.onDown.bind(this)));
+        this.canvas.addEventListener("touchend",(event)=>this.handleTouch(event.touches,this.onDown.bind(this)));
+        this.canvas.addEventListener("touchmove",(event)=>this.handleTouch(event.touches,this.onDown.bind(this)));
        
         this.ctx=this.canvas.getContext("2d");
         this.ctx.webkitImageSmoothingEnabled = false; //allow image scaling without blur effect
