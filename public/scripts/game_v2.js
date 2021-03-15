@@ -342,61 +342,6 @@ class OnlineMatch extends Match{
     
 } //Pending to Write
 
-class DebugMatch extends Match{
-    constructor(game){
-        super(game);
-        console.log("to join use join()");
-        window.join=()=>this.onOtherPlayerJoin();
-    }
-    onOtherPlayerJoin(){
-        super.onOtherPlayerJoin();
-        window.makeKnight=function(){
-            this.selectedCard=[0,1,2];
-            this.onOtherPlayerReady(true);
-        }.bind(this);
-        window.makeSneaker=function(...cards){
-            this.selectedCard=[];
-            for(var i=0;i<3;i++)if(this.cardIndex[cards[i]]===undefined){
-                console.log(`invalid card (${cards[i]}) selected`);
-            }
-                else this.selectedCards.push(this.cardIndex[cards[i]]);
-            this.onOtherPlayerReady(false);
-        }.bind(this);
-        
-        window.play=function(ci){
-            if(this.selectedCard[ci]===undefined)
-                console.log(`invalid card (${ci}) played yor avialable options are ${this.slesctedCard}`);
-            else{
-                this.playedCard=ci;
-                this.onOtherPlayerPlay(this.reveal ?  ci:3);
-            }
-        }.bind(this);
-        console.log("0=rock,1=paper,2=scissor");
-        console.log("call makeKnight() or makeSneaker(c1,c2,c2) to move next");
-    }
-    onOtherPlayerReady(isKnight){
-        super.onOtherPlayerReady(isKnight);
-        console.log("waiting for other player to complete");
-    }
-    onPlayerPlay(... arg){
-        console.log(this.p1.canPlay);
-        super.onPlayerPlay(...arg);
-        if(this.p2.played&&!this.p2.revealed)this.onOtherPlayerReveal(this.playedCard);
-        this.reveal=true;
-    }
-    startNewRound(){
-        super.startNewRound();
-        this.reveal=this.p2.first;
-        console.log("p1 wins",this.p1.win);
-        console.log("p2 wins",this.p2.win);
-    }
-    start(){
-        super.start();
-        console.log("you can play using play(card_no)");
-        console.log(`avialable options are ${this.slesctedCard}`);
-    }
-}
-
 class HelpLayer extends Layer{
     textLayer=new Layer();
     constructor(baseLayer,helpImg,closeImg,up){
@@ -504,10 +449,11 @@ class RPSgame {
             if(screen.width<screen.height)this.canvas.canvas.style.width="100vw";
             else this.canvas.canvas.style.width="100vh";
             this.canvas.updateBounds();
-        };//adjust canvas to fit screen after windo is resized
+        };
         
         window.addEventListener("resize",resize);
         resize();
+        
 //        this.canvas.setBG ("grey");
         container.style.backgroundColor=pallet[0];
         this.canvas.addChield(makeDrawable({},ctx=>{ctx.fillStyle=pallet[0];ctx.fillRect(0,0,500,500);}));
@@ -525,8 +471,6 @@ class RPSgame {
                 this.help.setText(text);
                 this.canvas.drawFrame();
                 this.setStartScreen();
-//                this.setCardSelector();
-//                this.setCololrPicker(2);
             }));
         });
     }
@@ -651,10 +595,6 @@ class RPSgame {
         new TextBox(250,230,rSentences[reasult],this.clr,20,this.canvas.ctx,this.baseLayer);
         this.AddTextButton(150,330,"replay",pallet[1],pallet[4]);
         this.AddTextButton(350,330," quit ",pallet[4],pallet[1]);
-    }
-    
-    startDebugGame(){
-        this.match=new DebugMatch(this);
     }
     initCommunication(){
         this.ch=new CommunicationHandler();
