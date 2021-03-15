@@ -499,8 +499,15 @@ class RPSgame {
         container.style.display="flex";
         this.canvas.canvas.style.display="block";
         this.canvas.canvas.style.margin="auto";
-        if(screen.width<screen.height)this.canvas.canvas.style.width="100vw";
-        else this.canvas.canvas.style.width="100vh";;
+        
+        let resize=()=>{
+            if(screen.width<screen.height)this.canvas.canvas.style.width="100vw";
+            else this.canvas.canvas.style.width="100vh";
+            this.canvas.updateBounds();
+        };//adjust canvas to fit screen after windo is resized
+        
+        window.addEventListener("resize",resize);
+        resize();
 //        this.canvas.setBG ("grey");
         container.style.backgroundColor=pallet[0];
         this.canvas.addChield(makeDrawable({},ctx=>{ctx.fillStyle=pallet[0];ctx.fillRect(0,0,500,500);}));

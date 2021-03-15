@@ -381,6 +381,9 @@ class Canvas extends Layer{
     hScale=1;
     vScale=1;
     
+    maxClickDelay=300;//if down up happen in maxClickDelay ms then click event is fired
+    es={}//contains start of each input event 
+    
     drawFrame(){
         this.ctx.clearRect(0,0,this.wid,this.hig);
         this.draw(this.ctx);
@@ -404,10 +407,22 @@ class Canvas extends Layer{
         this.vScale=this.hig/rect.height;
     }
     handleTouch(event,handler){
-        for(i=0;i<event.length;i++){
-            handler(this.hScale*(event[i].x-this.xOffset),this.vScale*(event[i].y-this.yOffset),event[i].identifier);
+        event.preventDefault();
+        for(var i=0;i<event.changedTouches.length;i++){
+            handler(this.hScale*(event.changedTouches[i].clientX-this.xOffset),this.vScale*(event.changedTouches[i].clientY-this.yOffset),event.changedTouches[i].identifier)
         }
     }
+    
+    // if down and up happens in next 2ms then it's click
+    onDown(px,py,id){
+        this.es[id]=performance.now();
+        super.onDown(px,py,id);
+    }
+    onUp(px,py,id){
+        if(performance.now()-this.es[id]<this.maxClickDelay)this.onClick(px,py);
+        super.onUp(px,py,id);
+    }
+    
     constructor (wid,hig){
         super();
         this.wid=wid||500;
@@ -417,16 +432,20 @@ class Canvas extends Layer{
         this.canvas.width=wid;
         this.canvas.height=hig;
         
+        //setup mutation observer to detect changes in attributea
+//        let mob=new MutationObserver((data)=>console.log(data));
+//        mob.observe(this.canvas,{attributes: true});
+        
         //setup Events
-        this.canvas.addEventListener("click",(event)=>{this.onClick(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset))});
-        this.canvas.addEventListener("mousedown",(event)=>{this.onDown(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
-        this.canvas.addEventListener("mouseup",(event)=>{this.onUp(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
-        this.canvas.addEventListener("mousemove",(event)=>{this.onMove(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
+//        this.canvas.addEventListener("click",(event)=>{this.onClick(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset))});
+        this.canvas.addEventListener("mousedown",(event)=>{event.preventDefault();this.onDown(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
+        this.canvas.addEventListener("mouseup",(event)=>{event.preventDefault();this.onUp(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
+        this.canvas.addEventListener("mousemove",(event)=>{event.preventDefault();this.onMove(this.hScale*(event.x-this.xOffset),this.vScale*(event.y-this.yOffset),-1)});
         
         //touch event setup
-        this.canvas.addEventListener("touchstart",(event)=>this.handleTouch(event.touches,this.onDown.bind(this)));
-        this.canvas.addEventListener("touchend",(event)=>this.handleTouch(event.touches,this.onDown.bind(this)));
-        this.canvas.addEventListener("touchmove",(event)=>this.handleTouch(event.touches,this.onDown.bind(this)));
+        this.canvas.addEventListener("touchstart",(event)=>this.handleTouch(event,this.onDown.bind(this)));
+        this.canvas.addEventListener("touchend",(event)=>this.handleTouch(event,this.onUp.bind(this)));
+        this.canvas.addEventListener("touchmove",(event)=>this.handleTouch(event,this.onMove.bind(this)));
        
         this.ctx=this.canvas.getContext("2d");
         this.ctx.webkitImageSmoothingEnabled = false; //allow image scaling without blur effect

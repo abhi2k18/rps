@@ -12,7 +12,7 @@ function KnightvsKnight(){
     game.match.onPlayerReady();
 }
 
-setTimeout(()=>game.canvas.updateBounds(),4000);
+//setTimeout(()=>game.canvas.updateBounds(),4000);
 //
 //let canvas =new Canvas(500,500);
 //document.body.appendChild(canvas.canvas);
