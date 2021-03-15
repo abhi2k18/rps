@@ -9,7 +9,6 @@
 const objects=require("./objects");
 const server =new objects.Server();
 
-const ActivePlayers={};
 const freePlayers=[];
 
 //basic match setup
@@ -19,7 +18,7 @@ function makePlayerSocket(socket,other,match){
     socket.emit("onOtherPlayerJoin"); //inform client that other player is found
     
     //event listners
-    socket.on("playerJoin",()=>match.getOther(socket).emit("onOtherPlayerJoin"));
+//    socket.on("playerJoin",()=>match.getOther(socket).emit("onOtherPlayerJoin"));
     socket.on("playerReady",(cards)=>{
         socket.isKnight=cards===null;
         socket.ready = true;
@@ -39,8 +38,24 @@ function makePlayerSocket(socket,other,match){
             other.revealed=false; //reset everything
         }
     });
-//    socket.on();
+    socket.on("playerQuite",()=>match.quite());
+    socket.on("playerRematch",()=>other.emit("onRematch"));
     
+}
+function resetSocket(socket){
+    //delet all things that defined
+    if(socket.match!==undefined)delete socket.match;
+    if(socket.isKnight!==undefined)delete socket.isKnight;
+    if(socket.ready!==undefined)delete socket.ready;
+    if(socket.playedCard!==undefined)delete socket.playedCard;
+    if(socket.played!==undefined)delete socket.played;
+    if(socket.revealed!==undefined)delete socket.revealed;
+    
+    //stop listners
+    socket.removeAllListeners("playerReady");
+    socket.removeAllListeners("playerPlayed");
+    socket.removeAllListeners("playerQuite");
+    socket.removeAllListeners("playerRematch");
 }
 class match{
     socks={}
@@ -51,12 +66,18 @@ class match{
         makePlayerSocket(sock1,sock2,this);//setup first socket
         makePlayerSocket(sock2,sock1,this);//setup second socket
     }
-    getOther(current){return socks[socks[true]!==current];}// simple but complex
+    getOther(current){return this.socks[this.socks[true]!==current];}// simple but complex
     setupVar(){
         if(this.socks[true].isKnight!==this.socks[false].isKnight){
             if(this.socks[true].isKnight)this.socks[true].reveal=true;
             else this.socks[false].reveal=true;
         }
+    }
+    quite(){
+        if(this.socks[false].connected)this.socks[false].emit("onOtherPlayerQuite");
+        if(this.socks[true].connected)this.socks[true].emit("onOtherPlayerQuite");
+        resetSocket(this.socks[false]);
+        resetSocket(this.socks[true]);
     }
 }
 
@@ -64,13 +85,13 @@ server.io.on("connection",function(sock){
     //new scocket is joined
     sock.on("playerJoin",()=>{
         console.log("player join");
-        if(sock.match!==undefined)return;
-        if(freePlayers.length>0){
-            new match(freePlayers.shift(),sock);
-        }else freePlayers.push(sock);
-        
+        if(freePlayers.includes(sock)||sock.match)return; //error preventation
+            if(freePlayers.length>0){
+                new match(freePlayers.shift(),sock);
+            }else freePlayers.push(sock);
     });//quicj match setup
     sock.on("disconnect",()=>{
+        if(sock.match)sock.match.quite();
         let i = freePlayers.indexOf(sock);
         if(i>=0)freePlayers.splice(i,0);
     });

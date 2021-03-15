@@ -39,6 +39,7 @@ class Server {
         this.server.listen(this.port);
     }
 }
+/*
 class Player {
     constructor(id,socket){
         this.id=id;
@@ -89,9 +90,7 @@ class Game{
         setPlayer(p2,p1);
     }
 }
-
+*///un used and written to add extra features
 module.exports = {
-   Server:Server,
-   Player:Player,
-   Game:Game
+   Server:Server
 };

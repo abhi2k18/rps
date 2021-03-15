@@ -72,6 +72,7 @@ class Match{
     
     //useful flags
     isTurnBased = false;
+    rematch=false;
     
     p1=new Player();//current player
     p2=new Player();//other player
@@ -133,8 +134,17 @@ class Match{
         }
         else if(this.tostTB) makeToast(this.tostTB,2.5,this.baseLayer); //toast to show why cant you play
     }
+    onPlayerRematch(){
+        this.p1.rematch=true;
+        if(this.p2.rematch)this.game.setPlayModeSelector();
+        else this.setMatchScreen();
+    }
     
     //methods called to handle opponent UI
+    onOtherPlayerRematch(){
+        this.p2.rematch=true;
+        if(this.p1.rematch)this.game.setPlayModeSelector();
+    }
     onOtherPlayerJoin(){this.game.setPlayModeSelector();}
     onOtherPlayerReady(isKnight){
         this.p2.knight=isKnight;
@@ -220,16 +230,22 @@ class Match{
         }
         
     }
-    setMatchScreen(){this.game.setWaitScreen();};
+    setMatchScreen(){
+        this.game.setWaitScreen();
+    };
     setReasultScreen(reasult){
         this.p1.canPlay=false;
         this.p2.canPlay=false;//removeing canplay to stop any accssedntal play
+        this.p1.rematch=false;
+        this.p2.rematch=false;
+        this.p1.ready=false;
+        this.p2.ready=false;
         
         setTimeout(()=>{
             this.baseLayer.clear();
             this.baseLayer.addChield(new TextBox(250,140,80,pallet[rColor[reasult]],rTitles[reasult]));
             this.baseLayer.addChield(new TextBox(250,260,20,pallet[rColor[reasult]],rSentences[reasult]));
-            this.game.AddTextButton(180,360,"Rematch",pallet[1],pallet[4],()=>this.setMatchScreen());
+            this.game.AddTextButton(180,360,"Rematch",pallet[1],pallet[4],()=>this.onPlayerRematch());
             this.game.AddTextButton(320,360," Quite ",pallet[4],pallet[1],()=>this.quiteMatch());
         },1000);
     }
@@ -253,6 +269,7 @@ class CommunicationHandler{
             socket.on("onOtherPlayerPlay",(ci)=>{this.onOtherPlayerPlay(ci);});
             socket.on("onOtherPlayerReveal",(ci)=>{this.onOtherPlayerReveal(ci);});
             socket.on("onOtherPlayerQuite",()=>{this.onOtherPlayerQuite();});
+            socket.on("onRematch",()=>{this.onOtherPlayerRematch();});
             
             this.socket=socket;
             //player methods
@@ -273,7 +290,7 @@ class CommunicationHandler{
     onOtherPlayerPlay(ci){}
     onOtherPlayerReveal(ci){}
     onOtherPlayerQuite(){}
-    
+    onOtherPlayerRematch(){}
     //send to server
     reqPing(){
         this.socket.emit("t0");
@@ -288,8 +305,20 @@ class CommunicationHandler{
     sendPlayerPlayed(ci){
         this.socket.emit("playerPlayed",ci);
     }
+    sendPlayerRematch(){
+        this.socket.emit('playerRematch');
+    }
     sendPlayerQuite(){
         this.socket.emit('playerQuite');
+    }
+    
+    reset(){
+        this.onOtherPlayerJoin=function(){};
+        this.onOtherPlayerReady=function(mode){};
+        this.onOtherPlayerPlay=function(ci){};
+        this.onOtherPlayerReveal=function(ci){};
+        this.onOtherPlayerQuite=function(){};
+        this.onOtherPlayerRematch=function(){};
     }
 }
 
@@ -320,11 +349,12 @@ class OnlineMatch extends Match{
         game.ch.onOtherPlayerPlay=(ci)=>this.onOtherPlayerPlay(ci);
         game.ch.onOtherPlayerReveal=(ci)=>this.onOtherPlayerReveal(ci);
         game.ch.onOtherPlayerQuite=()=>this.game.setStartScreen(); //no need of any steps as p2 quite rematch is not possible
+        game.ch.onOtherPlayerRematch=()=>this.onOtherPlayerRematch();
         super(game);
     }
     setMatchScreen(){
         super.setMatchScreen();
-        this.game.ch.sendPlayerJoin();
+        this.game.ch.sendPlayerJoin();//rematch is called
     }
     onPlayerReady(cards){
         super.onPlayerReady(cards);
@@ -334,9 +364,14 @@ class OnlineMatch extends Match{
         if(super.onPlayerPlay(card))
             this.game.ch.sendPlayerPlayed(card.ci);
     }
+    onPlayerRematch(){
+        super.onPlayerRematch();
+        this.game.ch.sendPlayerRematch();
+    }
     quiteMatch(){
         super.quiteMatch();
         this.game.ch.sendPlayerQuite();
+        this.hame.ch.reset();
     }
     
     
@@ -598,6 +633,5 @@ class RPSgame {
     }
     initCommunication(){
         this.ch=new CommunicationHandler();
-        this.ch.onConnect=()=>console.log("conbected");
     }
 }
