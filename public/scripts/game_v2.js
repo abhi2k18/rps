@@ -19,7 +19,7 @@ const reasult=[
 ];
 const rColor=[2,3,5];//result color bg
 const rTitles=["You Loose","It's Tie","You Win"];
-const rSentences=["opponent is luckier you loose","WOw you both are on same luck level","You Win Lucky ..."];
+const rSentences=["other player got lucky ....","some time no one wins","Luck always favours the winner"];
 const colorPallet={
     green:["#d6ffdd","#00ab11","#689663"],
     red:["#ffdfd6","#ff0000","#966363"],
@@ -377,15 +377,15 @@ class HelpLayer extends Layer{
             ctx.drawImage(up,this.x,-this.y,this.wid,-this.hig);
         },true);
         makePressable(this.upButton,()=>{
-            this.longText.decreamentScroll(10);
+            this.longText.decreamentScroll(3);
             this.updateScrollButton(this.upButton,this.longText.scrollPosi>0);
             this.updateScrollButton(this.downButton,this.longText.scrollPosi<1&&this.longText.maxY>0);
-        });
+        },10);
         makePressable(this.downButton,()=>{
-            this.longText.increamentScroll(10);
+            this.longText.increamentScroll(3);
             this.updateScrollButton(this.downButton,this.longText.scrollPosi<1&&this.longText.maxY>0);
             this.updateScrollButton(this.upButton,this.longText.scrollPosi>0);
-        });
+        },10);
         
         this.textLayer.addChield(this.longText);
         this.textLayer.addChield(this.upButton);
