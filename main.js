@@ -39,7 +39,7 @@ function makePlayerSocket(socket,other,match){
         }
     });
     socket.on("playerQuite",()=>match.quite());
-    socket.on("playerRematch",()=>other.emit("onRematch"));
+    socket.on("playerRematch",()=>{other.emit("onRematch"); socket.ready=false;);
     
 }
 function resetSocket(socket){
@@ -68,6 +68,8 @@ class match{
     }
     getOther(current){return this.socks[this.socks[true]!==current];}// simple but complex
     setupVar(){
+        this.socks[true].reveal=false;
+        this.socks[false].reveal=false;
         if(this.socks[true].isKnight!==this.socks[false].isKnight){
             if(this.socks[true].isKnight)this.socks[true].reveal=true;
             else this.socks[false].reveal=true;
