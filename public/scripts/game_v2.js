@@ -253,7 +253,10 @@ class Match{
 }
 class CommunicationHandler{
         
-    constructor(){
+    constructor(game){
+        this.toastTB=new TextBox(250,250,180,"white"," only 12 characters allowed ");
+        makeRoundedRect(this.toastTB,0,"black",16,8);
+        this.game=game;
         try{
             let socket = io.connect('/');
             
@@ -270,6 +273,19 @@ class CommunicationHandler{
             socket.on("onOtherPlayerReveal",(ci)=>{this.onOtherPlayerReveal(ci);});
             socket.on("onOtherPlayerQuite",()=>{this.onOtherPlayerQuite();});
             socket.on("onRematch",()=>{this.onOtherPlayerRematch();});
+            
+            //room responces
+            socket.on("roomreq",(status)=>{
+                this.game.baseLayer.clickable=true;
+                if(status){
+                    this.game.match = new OnlineMatch(this.game);
+                    this.game.match.onOtherPlayerJoin();
+                }
+                else{
+                    this.toastTB.setText("Cannot create or join room");
+                    makeToast(this.toastTB,2,this.game.baseLayer);
+                }
+            });
             
             this.socket=socket;
             //player methods
@@ -310,6 +326,19 @@ class CommunicationHandler{
     }
     sendPlayerQuite(){
         this.socket.emit('playerQuite');
+    }
+    
+    //handle room code
+    sendRoomReq(name,create){
+        if(name.length===0){
+            this.toastTB.setText("At least one char require");
+            makeToast(this.toastTB,5,this.game.baseLayer);
+            return;
+        }
+        this.game.baseLayer.clickable=false;
+        this.toastTB.setText("Wait for server response");
+        makeToast(this.toastTB,5,this.game.baseLayer);
+        this.socket.emit("roomreq",name,create);
     }
     
     reset(){
@@ -545,6 +574,11 @@ class RPSgame {
                     this.match=new OfflineMatch(this);
                     return true;
                 });
+        this.AddTextButton(250,360+100,"PlayWithFriend",pallet[1],pallet[4],
+                ()=>{
+                    this.setRoomScreen();
+                    return true;
+                });
         
     }
     setWaitScreen(){
@@ -624,6 +658,49 @@ class RPSgame {
         //calling setPlayer in match;
         this.match.onPlayerReady(cards);
     }
+    setRoomScreen(){
+        let baseLayer=this.baseLayer;
+        baseLayer.clear();
+        let RoomName=new TextBox(250,100,20,pallet[3],"enter your room no");
+        let toast_text=new TextBox(250,120,15,"white"," only 12 characters allowed ");
+        makeRoundedRect(toast_text,0,"black",10,4);
+        let roomNo=[];
+        baseLayer.addChield(RoomName);
+        const str="+0#123456789";
+//        this.AddTextButton(170,150,"clear",pallet[1],pallet[4],addText).setFont(15);
+//        this.AddTextButton(330,150," <-- ",pallet[1],pallet[4],addText).setFont(15);
+        
+        let clear= new TextBox(220,140,15,pallet[1],"clear");
+        baseLayer.addChield(clear);
+        makeRoundedRect(clear,4,pallet[5],5,5);
+        makeClickable(clear,()=>{
+            roomNo=[];
+            RoomName.setText("");
+        });
+        let backSpace= new TextBox(280,140,15,pallet[1]," <-- ");
+        baseLayer.addChield(backSpace);
+        makeRoundedRect(backSpace,4,pallet[5],5,5);
+        makeClickable(backSpace,()=>{
+            roomNo.pop();
+            RoomName.setText(roomNo.join(""));
+        });
+        
+        
+        function addText(){
+            if(roomNo.length>12){
+                makeToast(toast_text,2.5,baseLayer);
+                return;
+            }
+            roomNo.push(this.text);
+            RoomName.setText(roomNo.join(""));
+        }
+        for(var i =0;i<12;i++)
+            this.AddTextButton(250+((i%3)-1)*40,250-((Math.floor(i/3))-1)*40,str[i],pallet[1],pallet[5],addText);
+        
+        this.AddTextButton(170,350,"create",pallet[1],pallet[4],()=>this.ch.sendRoomReq(roomNo.join(""),true));
+        this.AddTextButton(330,350," join ",pallet[1],pallet[4],()=>this.ch.sendRoomReq(roomNo.join(""),false));
+        this.AddTextButton(250,400," quite ",pallet[4],pallet[1],()=>this.setStartScreen());        
+    }
     
     setReasultScreen(reasult){
         this.clearLayer();
@@ -632,6 +709,6 @@ class RPSgame {
         this.AddTextButton(350,330," quit ",pallet[4],pallet[1]);
     }
     initCommunication(){
-        this.ch=new CommunicationHandler();
+        this.ch=new CommunicationHandler(this);
     }
 }

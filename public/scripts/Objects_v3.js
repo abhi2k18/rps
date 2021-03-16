@@ -459,7 +459,7 @@ class TextBox extends Rect{
     constructor(cx,cy,font,color,text){
         super(cx-5,cy-5,10,10,cx,cy);
         this.font=font;
-        if(typeof font ==="number")this.font+="px monospace";//if just font size id given
+        if(typeof font ==="number")this.font+="px monospace";//if just font size is given
         this.color=color;
         this.setText(text);
         makeDrawable(this,function(ctx){
@@ -469,14 +469,20 @@ class TextBox extends Rect{
         });
     }
     setText(text){
+        this.text=text;
+        if(this.text.length===0)return;
         ctx.save();
         ctx.font=this.font;
         const mat=ctx.measureText(text);
         const hig=(mat.actualBoundingBoxAscent-mat.actualBoundingBoxDescent);
         this.update(...this.getOrigin(),mat.width,hig);
         this.dy=this.y+this.hig;
-        this.text=text;
         ctx.restore();
+    }
+    setFont(font){
+        this.font=font;
+        if(typeof font ==="number")this.font+="px monospace";//if just font size is given
+        this.setText(this.text);
     }
 }
 class LongTextBox extends Rect{

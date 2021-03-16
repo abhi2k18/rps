@@ -9,6 +9,7 @@
 const objects=require("./objects");
 const server =new objects.Server();
 
+const rooms={};
 const freePlayers=[];
 
 //basic match setup
@@ -86,13 +87,36 @@ class match{
 server.io.on("connection",function(sock){
     //new scocket is joined
     sock.on("playerJoin",()=>{
-        console.log("player join");
         if(freePlayers.includes(sock)||sock.match)return; //error preventation
             if(freePlayers.length>0){
                 new match(freePlayers.shift(),sock);
             }else freePlayers.push(sock);
     });//quicj match setup
+    sock.on("roomreq",(name,create)=>{
+        if(create){
+            if(rooms[name]===undefined){
+                sock.match=true;
+                sock.emit("roomreq",true);
+                rooms[name]=sock;
+                sock.room_name=name;
+                return;
+            }
+        }else {
+            if(rooms[name]!==undefined){
+                delete rooms[name].room_name;
+                new match(rooms[name],sock);
+                sock.emit("roomreq",true);
+                delete rooms[name];
+                return;
+            }
+        }
+        sock.emit("roomreq",false);
+    });
     sock.on("disconnect",()=>{
+        if(sock.room_name){
+            delete rooms[sock.room_name];
+            delete sock.room_name;
+        }
         if(sock.match)sock.match.quite();
         let i = freePlayers.indexOf(sock);
         if(i>=0)freePlayers.splice(i,0);
