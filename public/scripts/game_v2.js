@@ -279,7 +279,7 @@ class CommunicationHandler{
                 this.game.baseLayer.clickable=true;
                 if(status){
                     this.game.match = new OnlineMatch(this.game);
-                    this.game.match.onOtherPlayerJoin();
+                    if(this.join)this.game.match.onOtherPlayerJoin();
                 }
                 else{
                     this.toastTB.setText("Cannot create or join room");
@@ -330,6 +330,7 @@ class CommunicationHandler{
     
     //handle room code
     sendRoomReq(name,create){
+        this.join=!create;
         if(name.length===0){
             this.toastTB.setText("At least one char require");
             makeToast(this.toastTB,5,this.game.baseLayer);
