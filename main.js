@@ -28,7 +28,7 @@ function makePlayerSocket(socket,other,match){
     socket.on("playerPlayed",(ci)=>{
         socket.playedCard=ci;
         socket.played=true;
-        socket.revealed=socket.reveale||other.played;
+        socket.revealed=socket.reveal||other.played;
         other.emit("onOtherPlayerPlay",socket.revealed ? ci:3);
         if(other.played){
             if(!other.revealed)socket.emit("onOtherPlayerReveal",other.playedCard);
@@ -39,7 +39,7 @@ function makePlayerSocket(socket,other,match){
         }
     });
     socket.on("playerQuite",()=>match.quite());
-    socket.on("playerRematch",()=>{other.emit("onRematch"); socket.ready=false;);
+    socket.on("playerRematch",()=>{other.emit("onRematch"); socket.ready=false;});
     
 }
 function resetSocket(socket){
