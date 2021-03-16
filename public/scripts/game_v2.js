@@ -254,7 +254,7 @@ class Match{
 class CommunicationHandler{
         
     constructor(game){
-        this.toastTB=new TextBox(250,250,180,"white"," only 12 characters allowed ");
+        this.toastTB=new TextBox(250,250,25,"white"," only 12 characters allowed ");
         makeRoundedRect(this.toastTB,0,"black",16,8);
         this.game=game;
         try{
