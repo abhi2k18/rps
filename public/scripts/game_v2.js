@@ -375,7 +375,10 @@ class OnlineMatch extends Match{
     constructor(game){
         //setup listnersa in ch
         game.ch.onOtherPlayerJoin=()=>this.onOtherPlayerJoin();
-        game.ch.onOtherPlayerReady=(knight)=>this.onOtherPlayerReady(knight);
+        game.ch.onOtherPlayerReady=(knight)=>{
+            this.onOtherPlayerReady(knight);
+            game.ch.toastTB.setText("other player is "+(knight?"knight":"sneaker")); 
+            makeToast(game.ch.toastTB,2,game.canvas);};
         game.ch.onOtherPlayerPlay=(ci)=>this.onOtherPlayerPlay(ci);
         game.ch.onOtherPlayerReveal=(ci)=>this.onOtherPlayerReveal(ci);
         game.ch.onOtherPlayerQuite=()=>this.game.setStartScreen(); //no need of any steps as p2 quite rematch is not possible
