@@ -2,11 +2,11 @@ Rules:
 
   A)basic
 
-    1)Winner of First Two rounds wins match 
+    1)Winner of two rounds wins match 
 
-    2)Rock beats Paper
+    2)Rock beat Scissor
 
-    3)Paper beat Scissor
+    3)Paper beat Rock
 
     4)Scissor beat Rock
 
