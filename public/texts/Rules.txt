@@ -8,7 +8,7 @@ Rules:
 
     3)Paper beat Rock
 
-    4)Scissor beat Rock
+    4)Scissor beat Paper
 
 
   B)play modes
